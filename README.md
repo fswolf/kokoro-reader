@@ -152,13 +152,6 @@ export WEB_EXT_API_KEY='user:...' WEB_EXT_API_SECRET='...'
 web-ext sign --channel=unlisted
 ```
 
-Notes for re-signing: bump `version` in `manifest.json` first (AMO refuses a version it
-has already signed), and give the add-on your own `browser_specific_settings.gecko.id` —
-IDs are globally unique across AMO. If a run fails instantly with
-`Duplicate add-on ID found`, web-ext is replaying a cached upload: delete
-`.amo-upload-uuid` and `web-ext-artifacts/`, then run again. A real upload prints
-`Waiting for validation…`.
-
 ## License
 
 MIT — see [LICENSE](LICENSE).
