@@ -1,3 +1,5 @@
+<img width="1200" height="787" alt="image" src="https://github.com/user-attachments/assets/9f5859b3-2f0c-4b8a-9737-1d9ede304436" />
+
 # Kokoro Reader
 
 A Firefox extension that reads web pages aloud using [Kokoro](https://huggingface.co/hexgrad/Kokoro-82M)
