@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  :root {
+    --bg: #14121a; --fg: #efeaf6; --dim: #a79fb8; --line: #2e2a3a;
+    --accent: #c792ea; --ok: #7fd6a2; --bad: #ff8c92; --btn: #241f31;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg:#fff; --fg:#241f31; --dim:#6b6480; --line:#e4e0ec; --accent:#8b5cf6; --btn:#f4f1f9; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; width: 300px; font: 13px/1.45 system-ui, sans-serif;
+    background: var(--bg); color: var(--fg); padding: 12px;
+  }
+  h1 { font-size: 13px; margin: 0 0 8px; display: flex; align-items: center; gap: 6px; }
+  h1 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dim); }
+  h1 .dot.up { background: var(--ok); }
+  h1 .dot.down { background: var(--bad); }
+  h1 small { color: var(--dim); font-weight: 400; margin-left: auto; }
+  .row { display: flex; gap: 6px; margin-bottom: 8px; }
+  button {
+    flex: 1; padding: 7px 4px; border: 1px solid var(--line); border-radius: 7px;
+    background: var(--btn); color: var(--fg); font: inherit; cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #1a1420; font-weight: 600; }
+  button:disabled { opacity: .45; cursor: default; }
+  label { display: block; color: var(--dim); font-size: 11px; margin: 8px 0 3px; text-transform: uppercase; letter-spacing: .04em; }
+  select, input[type=text] {
+    width: 100%; padding: 5px 6px; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--btn); color: var(--fg); font: inherit;
+  }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  .sub { display: flex; justify-content: space-between; color: var(--dim); font-size: 11px; }
+  #now {
+    margin: 8px 0; padding: 7px 8px; border-left: 2px solid var(--accent);
+    background: var(--btn); border-radius: 0 6px 6px 0; color: var(--dim);
+    max-height: 62px; overflow: hidden; font-size: 12px;
+  }
+  #err { color: var(--bad); font-size: 11px; margin-top: 6px; }
+  details summary { color: var(--dim); font-size: 11px; cursor: pointer; margin-top: 8px; }
+  .hint { color: var(--dim); font-size: 10px; margin-top: 8px; }
+</style>
+</head>
+<body>
+  <h1><span class="dot" id="dot"></span>Kokoro Reader<small id="prog"></small></h1>
+
+  <div class="row">
+    <button class="primary" id="read">Read page</button>
+    <button id="stop">Stop</button>
+  </div>
+  <div class="row">
+    <button id="prev">&#9664;&#9664;</button>
+    <button id="toggle">Pause</button>
+    <button id="next">&#9654;&#9654;</button>
+  </div>
+
+  <div id="now"></div>
+
+  <label for="voice">Voice</label>
+  <select id="voice"></select>
+
+  <label for="speed">Speed <span id="speedv"></span></label>
+  <input type="range" id="speed" min="0.6" max="1.6" step="0.05">
+
+  <label for="volume">Volume</label>
+  <input type="range" id="volume" min="0" max="1" step="0.05">
+
+  <details>
+    <summary>Server</summary>
+    <label for="server">URL</label>
+    <input type="text" id="server" spellcheck="false">
+  </details>
+
+  <div id="err"></div>
+  <div class="hint">Ctrl+Shift+U read / pause &middot; Ctrl+Shift+Y stop</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

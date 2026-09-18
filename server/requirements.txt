@@ -1,0 +1,3 @@
+# The server itself is stdlib-only; these are for Kokoro synthesis.
+kokoro>=0.9.4
+numpy>=1.24

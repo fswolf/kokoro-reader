@@ -1,0 +1,12 @@
+{
+  "addons": {
+    "kokoro-reader@fswolf.dev": {
+      "updates": [
+        {
+          "version": "1.0.1",
+          "update_link": "https://github.com/fswolf/kokoro-reader/releases/download/v1.0.1/kokoro_reader-1.0.1.xpi"
+        }
+      ]
+    }
+  }
+}

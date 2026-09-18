@@ -1,0 +1,53 @@
+{
+  "manifest_version": 2,
+  "name": "Kokoro Reader",
+  "version": "1.0.1",
+  "description": "Reads web pages aloud with a local Kokoro TTS server.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "kokoro-reader@fswolf.dev",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      },
+      "update_url": "https://raw.githubusercontent.com/fswolf/kokoro-reader/main/updates.json"
+    }
+  },
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "storage",
+    "contextMenus",
+    "http://127.0.0.1/*",
+    "http://localhost/*"
+  ],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": true
+  },
+  "browser_action": {
+    "default_title": "Kokoro Reader",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "48": "icons/icon48.svg",
+      "96": "icons/icon96.svg"
+    }
+  },
+  "icons": {
+    "48": "icons/icon48.svg",
+    "96": "icons/icon96.svg"
+  },
+  "web_accessible_resources": [],
+  "commands": {
+    "toggle-read": {
+      "suggested_key": { "default": "Ctrl+Shift+U" },
+      "description": "Read page / pause / resume"
+    },
+    "stop-read": {
+      "suggested_key": { "default": "Ctrl+Shift+Y" },
+      "description": "Stop reading"
+    },
+    "next-chunk": { "description": "Next sentence" },
+    "prev-chunk": { "description": "Previous sentence" }
+  }
+}

@@ -1,0 +1,16 @@
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# web-ext
+extension/web-ext-artifacts/
+extension/.amo-upload-uuid
+node_modules/
+
+# editors / os
+.vscode/
+.idea/
+*.swp
+.DS_Store
