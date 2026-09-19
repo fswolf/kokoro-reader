@@ -2,6 +2,11 @@
 
 # Kokoro Reader
 
+<p align="center">
+  <img src="docs/popup.png" width="760"
+       alt="The Kokoro Reader toolbar popup in dark and light themes: playback controls, the sentence currently being read, and voice, speed and volume settings.">
+</p>
+
 A Firefox extension that reads web pages aloud using [Kokoro](https://huggingface.co/hexgrad/Kokoro-82M)
 running locally on your own machine. No cloud TTS, no API keys, no telemetry — the page text
 goes to `127.0.0.1` and nowhere else.
@@ -47,8 +52,8 @@ First start downloads the model and takes a minute. When it prints
 curl -s localhost:8899/health
 ```
 
-Leave it running. To start it automatically, there's a systemd user unit at the bottom of
-this file.
+Leave it running. If you'd rather not keep a terminal open, see
+[Tray app](#tray-app) below, or the systemd unit at the bottom of this file.
 
 ### 2. The extension
 

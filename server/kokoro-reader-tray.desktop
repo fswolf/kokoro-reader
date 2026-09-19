@@ -1,0 +1,11 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Type=Application
+Name=Kokoro Reader
+GenericName=Local TTS server
+Comment=Start and stop the local Kokoro TTS server from the tray
+Exec=python3 %h/kokoro-reader/server/kokoro_tray.py
+Icon=audio-speakers
+Terminal=false
+Categories=Utility;Accessibility;
+StartupNotify=false
