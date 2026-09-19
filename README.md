@@ -83,6 +83,31 @@ Default voice is `am_adam`. Also good: `am_michael`, `am_onyx`, `bm_george`, `bm
 (male), `af_bella`, `af_heart`, `bf_emma` (female). The popup lists whatever the server
 reports.
 
+## Tray app
+
+Optional. `server/kokoro_tray.py` runs the server as a child process and puts it in the
+system tray, so it starts from your app launcher instead of a terminal. The menu has a live
+status line, start/stop/restart, test voice, and quit (which stops the server too).
+
+```bash
+sudo dnf install python3-gobject libayatana-appindicator-gtk3
+# Debian/Ubuntu: sudo apt install python3-gi gir1.2-ayatanaappindicator3-0.1
+
+cp server/kokoro-reader-tray.desktop ~/.local/share/applications/
+update-desktop-database ~/.local/share/applications
+```
+
+Then launch "Kokoro Reader" from your launcher.
+
+- The `.desktop` file assumes the repo is at `~/kokoro-reader`. Elsewhere, edit its `Exec=`
+  line — and **quote the path if it contains spaces**, because `Exec` splits on whitespace
+  and an unquoted path fails silently:
+  `Exec=python3 "/home/you/My Projects/kokoro-reader/server/kokoro_tray.py"`
+- On Wayland the tray is your bar's job: Waybar needs `"tray"` in `modules-right`, or the
+  app runs but nothing draws the icon.
+- `KOKORO_TRAY_AUTOSTART=0` starts the tray without starting the server.
+- Nothing happens when launched? Run `python3 server/kokoro_tray.py` to see the error.
+
 ## Configuration
 
 Server, via env vars (set them in `server/start_server.sh`):
