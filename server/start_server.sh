@@ -1,13 +1,13 @@
 #!/bin/bash
 # Kokoro Reader TTS server
 set -e
-cd "$(dirname "$(readlink -f "$0")")"
+cd "$(dirname "$0")"   # plain dirname: macOS readlink has no -f
 
 export KOKORO_HOST=127.0.0.1
 export KOKORO_PORT=8899
 export KOKORO_VOICE=am_adam
 # export KOKORO_LANG=a        # a=American, b=British
-# export KOKORO_DEVICE=cuda   # force GPU
+# export KOKORO_DEVICE=cuda   # cuda (NVIDIA/ROCm) or mps (Apple Silicon)
 
 # Use the first venv we find, else whatever python3 is on PATH.
 for venv in .venv ../.venv "$HOME/ai-voice-venv"; do

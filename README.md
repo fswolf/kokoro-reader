@@ -30,7 +30,7 @@ synthesis. The extension alone does nothing.
 - Python 3.10+
 - ~400 MB disk for the model (downloaded once, automatically)
 - `espeak-ng` installed system-wide (Kokoro falls back to it for unusual words)
-  — `sudo dnf install espeak-ng` / `sudo apt install espeak-ng`
+  — `sudo dnf install espeak-ng` / `sudo apt install espeak-ng` / `brew install espeak-ng`
 - A GPU is optional. CPU synthesis is roughly real-time; a GPU is comfortably faster.
 
 ## Install
@@ -107,6 +107,41 @@ Then launch "Kokoro Reader" from your launcher.
   app runs but nothing draws the icon.
 - `KOKORO_TRAY_AUTOSTART=0` starts the tray without starting the server.
 - Nothing happens when launched? Run `python3 server/kokoro_tray.py` to see the error.
+
+## macOS
+
+Server and extension work the same. Three differences.
+
+**Dependencies** via Homebrew:
+
+```bash
+brew install python espeak-ng
+```
+
+**No tray app** — `kokoro_tray.py` needs GTK and AppIndicator, which are Linux-only. Run
+`server/start_server.sh` from Terminal, or start it at login with launchd:
+
+```xml
+<!-- ~/Library/LaunchAgents/local.kokoro-reader.plist -->
+<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0">
+<dict>
+  <key>Label</key>            <string>local.kokoro-reader</string>
+  <key>ProgramArguments</key> <array>
+    <string>/Users/YOU/kokoro-reader/server/start_server.sh</string>
+  </array>
+  <key>RunAtLoad</key>        <true/>
+  <key>KeepAlive</key>        <true/>
+</dict>
+</plist>
+```
+
+```bash
+launchctl load ~/Library/LaunchAgents/local.kokoro-reader.plist
+```
+
+**Apple Silicon** — set `KOKORO_DEVICE=mps` in `start_server.sh` to use the GPU via Metal.
+Leave it unset for CPU if torch complains.
 
 ## Configuration
 
