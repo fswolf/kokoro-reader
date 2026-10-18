@@ -1,0 +1,13 @@
+.git
+.gitignore
+docs
+extension
+updates.json
+README.md
+LICENSE
+**/__pycache__
+**/*.pyc
+**/.venv
+server/start_server.sh
+server/kokoro_tray.py
+server/kokoro-reader-tray.desktop

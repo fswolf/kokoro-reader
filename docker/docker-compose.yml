@@ -1,0 +1,38 @@
+# Kokoro Reader — Unraid / Docker Compose
+#
+# Unraid: Compose Manager plugin → Add New Stack → paste this.
+# Point `context` at wherever you cloned the repo, e.g.
+#   git clone https://github.com/fswolf/kokoro-reader.git /mnt/user/appdata/kokoro-reader/src
+
+services:
+  kokoro-reader:
+    build:
+      context: /mnt/user/appdata/kokoro-reader/src
+      dockerfile: docker/Dockerfile
+    image: kokoro-reader:latest
+    container_name: kokoro-reader
+    restart: unless-stopped
+
+    ports:
+      - "8899:8899"
+
+    environment:
+      # Must be 0.0.0.0 inside the container, or the published port reaches nothing.
+      KOKORO_HOST: "0.0.0.0"
+      KOKORO_PORT: "8899"
+      KOKORO_VOICE: "am_adam"
+      KOKORO_LANG: "a"
+
+      # Torch grabs every core by default. On a box that also transcodes,
+      # cap it so synthesis doesn't fight Jellyfin for CPU.
+      OMP_NUM_THREADS: "4"
+
+    volumes:
+      # Model weights (~330 MB), downloaded once and kept across rebuilds.
+      - /mnt/user/appdata/kokoro-reader/cache:/cache/huggingface
+
+    # Hard ceiling to go with OMP_NUM_THREADS above.
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "4.0"

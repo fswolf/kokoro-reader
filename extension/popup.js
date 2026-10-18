@@ -73,4 +73,27 @@ $('voice').onchange = (e) => browser.storage.local.set({ voice: e.target.value }
 $('speed').oninput = (e) => { $('speedv').textContent = (+e.target.value).toFixed(2) + '×'; };
 $('speed').onchange = (e) => browser.storage.local.set({ speed: +e.target.value }).then(() => send('reload'));
 $('volume').onchange = (e) => browser.storage.local.set({ volume: +e.target.value });
-$('server').onchange = (e) => browser.storage.local.set({ server: e.target.value.trim() }).then(health);
+
+// A server on the LAN (e.g. a NAS) needs a host permission the manifest doesn't
+// grant up front. Ask for it here — must run from a user gesture, which this is.
+const LOOPBACK = ['127.0.0.1', 'localhost', '::1', '[::1]'];
+
+async function ensureHostPermission(raw) {
+  let u;
+  try { u = new URL(raw); } catch { return false; }
+  if (LOOPBACK.includes(u.hostname)) return true;          // covered by the manifest
+  const origins = [`${u.protocol}//${u.hostname}/*`];      // match patterns ignore the port
+  if (await browser.permissions.contains({ origins })) return true;
+  return browser.permissions.request({ origins });
+}
+
+$('server').onchange = async (e) => {
+  const url = e.target.value.trim();
+  if (!(await ensureHostPermission(url))) {
+    $('err').textContent = 'Permission denied for that host — the extension can\'t reach it.';
+    return;
+  }
+  await browser.storage.local.set({ server: url });
+  health();
+};
+

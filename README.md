@@ -141,6 +141,48 @@ launchctl load ~/Library/LaunchAgents/local.kokoro-reader.plist
 **Apple Silicon** — set `KOKORO_DEVICE=mps` in `start_server.sh` to use the GPU via Metal.
 Leave it unset for CPU if torch complains.
 
+## Docker (Unraid)
+
+Running the server on a NAS keeps it always-on and lets every machine on the LAN use it.
+
+```bash
+# on the server
+git clone https://github.com/fswolf/kokoro-reader.git /mnt/user/appdata/kokoro-reader/src
+mkdir -p /mnt/user/appdata/kokoro-reader/cache
+```
+
+Unraid: **Compose Manager** plugin → Add New Stack → paste `docker/docker-compose.yml`,
+fix `context` if you cloned elsewhere, then Compose Up. The first build pulls CPU torch and
+takes a few minutes; the first request downloads the model.
+
+```bash
+curl -s http://YOUR-SERVER:8899/health
+```
+
+Then put that URL in the extension popup under **Server**. Firefox will prompt for
+permission to reach the host — the manifest grants only loopback up front and asks for
+anything else at the moment you set it.
+
+- `KOKORO_HOST` **must** be `0.0.0.0` inside the container or the published port reaches
+  nothing. The compose file sets it; the default would silently fail.
+- Mount `/cache/huggingface` or the model re-downloads on every container recreate.
+- `OMP_NUM_THREADS` caps how many cores torch takes — worth setting on a box that also
+  transcodes video.
+- The image is ~1.5 GB. Torch comes from PyTorch's `cpu` index; the PyPI wheels pull CUDA
+  and would make it ~6 GB.
+- If the build fails on a dependency, try `python:3.11-slim` in `docker/Dockerfile`.
+
+**Check synthesis speed before committing to it.** Latency lands right before each sentence,
+and a NAS CPU is usually slower than a desktop:
+
+```bash
+time curl -s -X POST http://YOUR-SERVER:8899/tts \
+  -H 'Content-Type: application/json' \
+  -d '{"text":"The quick brown fox jumps over the lazy dog."}' -o /dev/null
+```
+
+Under a second for that sentence and the extension's prefetch hides it entirely.
+
 ## Configuration
 
 Server, via env vars (set them in `server/start_server.sh`):
@@ -172,6 +214,11 @@ Extension, in the popup: voice, speed, volume, and the server URL.
 The server binds to `127.0.0.1` and has no authentication, which is fine for a loopback
 socket. Don't change `KOKORO_HOST` to `0.0.0.0` on a shared or untrusted network — that
 would let anyone on it synthesize arbitrary text on your machine.
+
+Running it in Docker *does* expose it, by necessity — the container binds `0.0.0.0` so the
+published port works. That's reasonable on a home LAN and the same posture as most NAS
+services, but keep the port off the internet: don't forward it, and don't put it behind a
+public reverse proxy without adding auth in front.
 
 The extension declares `data_collection_permissions: none` and means it: page text is
 POSTed to your local server, nothing is stored, nothing leaves the machine.

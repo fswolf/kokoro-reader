@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Kokoro Reader",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Reads web pages aloud with a local Kokoro TTS server.",
   "browser_specific_settings": {
     "gecko": {
@@ -20,6 +20,9 @@
     "contextMenus",
     "http://127.0.0.1/*",
     "http://localhost/*"
+  ],
+  "optional_permissions": [
+    "http://*/*"
   ],
   "background": {
     "scripts": ["background.js"],

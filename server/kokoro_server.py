@@ -4,8 +4,25 @@
 Stdlib only + kokoro/numpy (already in ~/ai-voice-venv).
 
   GET  /health          -> {"ok":true,"voice":...,"loaded":bool}
-  GET  /voices          -> {"voices":[...]}
+  GET  /voices          -> {"voices":[...],"blends":{...}}
   POST /tts             -> audio/wav   body: {"text":..,"voice":..,"speed":1.0}
+
+Voices can be blended. A Kokoro voice is a [510,1,256] embedding tensor,
+so a weighted average of two of them is itself a valid voice - one that
+exists nowhere else, at no cost in speed, because the model does the
+same amount of work either way.
+
+  "af_bella"                  a stock voice, as before
+  "af_bella,af_sky"           equal mix
+  "af_bella:0.7,af_sky:0.3"   weighted; weights are normalised
+  "luna"                      a name from blends.json
+
+blends.json sits beside this file and maps names to recipes:
+
+  {"luna": "af_bella:0.6,af_sky:0.4"}
+
+so the client only ever has to say "luna", and retuning her doesn't
+mean editing every client that talks to this server.
 
 Env: KOKORO_HOST KOKORO_PORT KOKORO_LANG KOKORO_DEVICE KOKORO_VOICE
 """
@@ -36,8 +53,82 @@ VOICES = [
     "bf_emma", "bf_isabella", "bf_alice", "bf_lily",
 ]
 
+BLENDS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           "blends.json")
+
 _pipe = None
 _lock = threading.Lock()
+_blend_cache = {}
+
+
+def blends():
+    """Named recipes. Re-read per call so editing the file takes effect
+    without a restart - it is a few hundred bytes and nobody is calling
+    /voices in a loop."""
+    try:
+        with open(BLENDS_FILE) as f:
+            data = json.load(f)
+        return {str(k): str(v) for k, v in data.items()} if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def parse_blend(spec):
+    """'af_bella:0.6,af_sky:0.4' -> [('af_bella',0.6), ('af_sky',0.4)].
+
+    Weights are normalised, so 6:4, 60:40 and 0.6:0.4 all mean the same
+    thing and nobody has to make them sum to one. A missing weight is 1.
+    """
+    parts = []
+    for piece in spec.split(","):
+        piece = piece.strip()
+        if not piece:
+            continue
+        name, _, weight = piece.partition(":")
+        name = name.strip()
+        if not name:
+            continue
+        try:
+            w = float(weight) if weight.strip() else 1.0
+        except ValueError:
+            w = 1.0
+        if w > 0:
+            parts.append((name, w))
+    total = sum(w for _, w in parts)
+    return [(n, w / total) for n, w in parts] if total > 0 else []
+
+
+def voice_for(name):
+    """What to hand KPipeline: a plain name, or a blended tensor.
+
+    Plain names are passed through as strings untouched, so the common
+    path behaves exactly as it did before this existed.
+    """
+    name = (name or "").strip()
+    recipes = blends()
+    spec = recipes.get(name, name)
+
+    if "," not in spec and ":" not in spec:
+        return spec or DEFAULT_VOICE
+
+    if spec in _blend_cache:
+        return _blend_cache[spec]
+
+    parts = parse_blend(spec)
+    if not parts:
+        return DEFAULT_VOICE
+    if len(parts) == 1:
+        return parts[0][0]
+
+    mixed = None
+    for voice_name, weight in parts:
+        pack = pipe().load_voice(voice_name)
+        contribution = pack * weight
+        mixed = contribution if mixed is None else mixed + contribution
+
+    _blend_cache[spec] = mixed
+    print("blended %s -> %s" % (name, spec), flush=True)
+    return mixed
 
 
 def pipe():
@@ -110,7 +201,10 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, {"ok": True, "voice": DEFAULT_VOICE,
                              "loaded": _pipe is not None, "lang": LANG})
         elif path == "/voices":
-            self._json(200, {"voices": VOICES, "default": DEFAULT_VOICE})
+            recipes = blends()
+            self._json(200, {"voices": sorted(recipes) + VOICES,
+                             "blends": recipes,
+                             "default": DEFAULT_VOICE})
         else:
             self._json(404, {"error": "not found"})
 
@@ -132,7 +226,7 @@ class Handler(BaseHTTPRequestHandler):
 
         try:
             with _lock:
-                audio = synth(text, voice, speed)
+                audio = synth(text, voice_for(voice), speed)
             self._send(200, wav_bytes(audio), "audio/wav")
         except Exception as e:
             self.log_message("tts failed: %s", e)
