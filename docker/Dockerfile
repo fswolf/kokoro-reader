@@ -1,5 +1,6 @@
 # Kokoro Reader TTS server
 FROM python:3.12-slim
+LABEL org.opencontainers.image.source=https://github.com/fswolf/kokoro-reader
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends espeak-ng \
