@@ -144,33 +144,41 @@ Leave it unset for CPU if torch complains.
 ## Docker (Unraid)
 
 Running the server on a NAS keeps it always-on and lets every machine on the LAN use it.
+A prebuilt image is published to `ghcr.io/fswolf/kokoro-reader` on every push, so there's
+nothing to build.
 
-```bash
-# on the server
-git clone https://github.com/fswolf/kokoro-reader.git /mnt/user/appdata/kokoro-reader/src
-mkdir -p /mnt/user/appdata/kokoro-reader/cache
-```
+**Docker tab → Add Container**, then:
 
-Unraid: **Compose Manager** plugin → Add New Stack → paste `docker/docker-compose.yml`,
-fix `context` if you cloned elsewhere, then Compose Up. The first build pulls CPU torch and
-takes a few minutes; the first request downloads the model.
+| Field | Value |
+|---|---|
+| Name | `kokoro-reader` |
+| Repository | `ghcr.io/fswolf/kokoro-reader:latest` |
+| Network Type | Host |
+
+Add two entries with **Add another Path, Port, Variable, Label or Device**:
+
+| Config Type | Name | Key / Container Path | Value / Host Path |
+|---|---|---|---|
+| Path | Model Cache | `/cache/huggingface` | `/mnt/user/appdata/kokoro-reader/cache` |
+| Variable | CPU Threads | `OMP_NUM_THREADS` | `4` |
+
+Apply. The image is ~1.5 GB, and the first start downloads the model (~330 MB), so give it a
+minute, then:
 
 ```bash
 curl -s http://YOUR-SERVER:8899/health
 ```
 
-Then put that URL in the extension popup under **Server**. Firefox will prompt for
-permission to reach the host — the manifest grants only loopback up front and asks for
-anything else at the moment you set it.
+Put that URL in the extension popup under **Server**. Firefox prompts for permission to
+reach the host — the manifest grants only loopback up front.
 
-- `KOKORO_HOST` **must** be `0.0.0.0` inside the container or the published port reaches
-  nothing. The compose file sets it; the default would silently fail.
-- Mount `/cache/huggingface` or the model re-downloads on every container recreate.
-- `OMP_NUM_THREADS` caps how many cores torch takes — worth setting on a box that also
+- **Network Type.** Host needs no port mapping. With Bridge, add a Port: container `8899`,
+  host `8899`, TCP.
+- **Model Cache** keeps the weights across container updates. Without it they re-download
+  every time.
+- **CPU Threads** caps how many cores torch takes. Worth setting on a box that also
   transcodes video.
-- The image is ~1.5 GB. Torch comes from PyTorch's `cpu` index; the PyPI wheels pull CUDA
-  and would make it ~6 GB.
-- If the build fails on a dependency, try `python:3.11-slim` in `docker/Dockerfile`.
+- **Updates.** Push to `main` → GitHub rebuilds the image → Unraid shows "update ready".
 
 **Check synthesis speed before committing to it.** Latency lands right before each sentence,
 and a NAS CPU is usually slower than a desktop:
@@ -182,6 +190,21 @@ time curl -s -X POST http://YOUR-SERVER:8899/tts \
 ```
 
 Under a second for that sentence and the extension's prefetch hides it entirely.
+
+<details>
+<summary>Building the image yourself / Docker Compose</summary>
+
+`docker/docker-compose.yml` builds from source — use it with Unraid's Compose Manager plugin
+or plain `docker compose`. Clone the repo, point `context` at it, and Compose Up.
+
+```bash
+git clone https://github.com/fswolf/kokoro-reader.git /mnt/user/appdata/kokoro-reader/src
+docker build -f docker/Dockerfile -t kokoro-reader:latest /mnt/user/appdata/kokoro-reader/src
+```
+
+`KOKORO_HOST` must be `0.0.0.0` inside the container or a published port reaches nothing —
+the image sets it. If a build fails on a dependency, try `python:3.11-slim` in the Dockerfile.
+</details>
 
 ## Configuration
 
