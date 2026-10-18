@@ -23,9 +23,9 @@ services:
       KOKORO_VOICE: "am_adam"
       KOKORO_LANG: "a"
 
-      # Torch grabs every core by default. On a box that also transcodes,
-      # cap it so synthesis doesn't fight Jellyfin for CPU.
-      OMP_NUM_THREADS: "4"
+      # Set to your number of performance cores. On hybrid Intel chips (12th gen+)
+      # going higher spills onto E-cores and makes synthesis *slower*.
+      OMP_NUM_THREADS: "6"
 
     volumes:
       # Model weights (~330 MB), downloaded once and kept across rebuilds.
@@ -35,4 +35,4 @@ services:
     # deploy:
     #   resources:
     #     limits:
-    #       cpus: "4.0"
+    #       cpus: "6.0"

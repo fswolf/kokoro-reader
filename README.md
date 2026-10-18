@@ -152,6 +152,7 @@ nothing to build.
 | Field | Value |
 |---|---|
 | Name | `kokoro-reader` |
+| Icon URL | `https://raw.githubusercontent.com/fswolf/kokoro-reader/main/docs/icon.png` (Advanced View) |
 | Repository | `ghcr.io/fswolf/kokoro-reader:latest` |
 | Network Type | Host |
 
@@ -160,7 +161,7 @@ Add two entries with **Add another Path, Port, Variable, Label or Device**:
 | Config Type | Name | Key / Container Path | Value / Host Path |
 |---|---|---|---|
 | Path | Model Cache | `/cache/huggingface` | `/mnt/user/appdata/kokoro-reader/cache` |
-| Variable | CPU Threads | `OMP_NUM_THREADS` | `4` |
+| Variable | CPU Threads | `OMP_NUM_THREADS` | `6` |
 
 Apply. The image is ~1.5 GB, and the first start downloads the model (~330 MB), so give it a
 minute, then:
@@ -176,8 +177,10 @@ reach the host — the manifest grants only loopback up front.
   host `8899`, TCP.
 - **Model Cache** keeps the weights across container updates. Without it they re-download
   every time.
-- **CPU Threads** caps how many cores torch takes. Worth setting on a box that also
-  transcodes video.
+- **CPU Threads** — set it to your number of *performance* cores, not total threads.
+  On hybrid Intel chips (12th gen and later), extra threads land on E-cores and every
+  sentence waits for the slowest one. Measured on an i5-12600K (6 P-cores): 6 threads
+  ≈ 0.5 s per sentence, 8 threads ≈ 0.9 s.
 - **Updates.** Push to `main` → GitHub rebuilds the image → Unraid shows "update ready".
 
 **Check synthesis speed before committing to it.** Latency lands right before each sentence,
