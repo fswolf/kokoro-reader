@@ -288,6 +288,12 @@ export WEB_EXT_API_KEY='user:...' WEB_EXT_API_SECRET='...'
 web-ext sign --channel=unlisted
 ```
 
+## Support
+
+If Kokoro Reader is useful to you, you can sponsor its development:
+
+[![Sponsor](https://img.shields.io/badge/Sponsor-fswolf-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/fswolf)
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
